@@ -31,6 +31,11 @@ app.get('/health', (req, res) => {
     });
 });
 
+// Root route handler
+app.get('/', (req, res) => {
+    res.json({ message: 'Backend is running successfully' });
+});
+
 // API routes
 app.use('/api/tmdb', tmdbRoutes);
 app.use('/api/videohosting', videohostingRoutes);
