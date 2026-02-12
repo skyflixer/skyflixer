@@ -12,6 +12,7 @@ export const config = {
     cors: {
         origin: [
             process.env.FRONTEND_URL || 'http://localhost:8080',
+            'https://skyflixer.netlify.app',
             'http://localhost:8080',
             'http://127.0.0.1:8080',
             'http://localhost:5173', // Vite default
