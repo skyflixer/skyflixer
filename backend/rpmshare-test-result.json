@@ -1,0 +1,30 @@
+{
+  "servers": {
+    "streamp2p": {
+      "hostName": "streamp2p",
+      "available": false,
+      "error": "Both primary and fallback APIs failed: No matching video found in fallback API"
+    },
+    "seekstreaming": {
+      "hostName": "seekstreaming",
+      "available": false,
+      "error": "Both primary and fallback APIs failed: No matching video found in fallback API"
+    },
+    "upnshare": {
+      "hostName": "upnshare",
+      "available": false,
+      "error": "Both primary and fallback APIs failed: No matching video found in fallback API"
+    },
+    "rpmshare": {
+      "hostName": "rpmshare",
+      "available": false,
+      "error": "Both primary and fallback APIs failed: No matching video found in fallback API"
+    }
+  },
+  "availableCount": 0,
+  "tmdbData": {
+    "title": "Deadpool & Wolverine",
+    "type": "movie",
+    "year": 2024
+  }
+}

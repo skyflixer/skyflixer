@@ -1,0 +1,537 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* SKYFLIXER Design System - Dark Theme with Electric Blue Accent */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@layer base {
+  :root {
+    /* SKYFLIXER Dark Theme */
+    --background: 0 0% 4%;
+    /* #0a0a0a */
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 8%;
+    /* #141414 */
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Electric Blue Accent */
+    --primary: 199 89% 48%;
+    /* #0ea5e9 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 64%;
+
+    --accent: 199 89% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 199 89% 48%;
+
+    --radius: 0.5rem;
+
+    /* SKYFLIXER Custom Colors */
+    --skyflix-dark: 0 0% 4%;
+    --skyflix-darker: 0 0% 2%;
+    --skyflix-card: 0 0% 8%;
+    --skyflix-accent: 199 89% 48%;
+    --skyflix-accent-glow: 199 89% 60%;
+    --skyflix-success: 142 76% 36%;
+    --skyflix-warning: 38 92% 50%;
+    --skyflix-gradient-start: 199 89% 48%;
+    --skyflix-gradient-end: 262 83% 58%;
+
+    /* Glassmorphism */
+    --glass-bg: 0 0% 10% / 0.8;
+    --glass-border: 0 0% 100% / 0.1;
+    --glass-blur: blur(20px);
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 16px hsl(0 0% 0% / 0.4);
+    --shadow-lg: 0 8px 32px hsl(0 0% 0% / 0.5);
+    --shadow-xl: 0 16px 48px hsl(0 0% 0% / 0.6);
+    --shadow-glow: 0 0 40px hsl(199 89% 48% / 0.3);
+
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 199 89% 48%;
+  }
+
+  .dark {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 64%;
+    --accent: 199 89% 48%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 31%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 199 89% 48%;
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 199 89% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    /* Lenis handles smooth scrolling, so we can remove native smooth scroll or keep as fallback */
+    scroll-behavior: auto;
+  }
+
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  .lenis.lenis-scrolling iframe {
+    pointer-events: none;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    /* Slimmer for modern feel */
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+    /* Cleaner track */
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 99px;
+    /* Pill shape */
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+
+  /* Hide scrollbar for content rows */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Transparent scrollbar for horizontal scrolling */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@layer components {
+
+  /* Glass Effect */
+  .glass {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid hsl(var(--glass-border));
+  }
+
+  /* Gradient Text */
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(var(--skyflix-gradient-start)), hsl(var(--skyflix-gradient-end)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glow Effect */
+  .glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .glow-text {
+    text-shadow: 0 0 20px hsl(var(--skyflix-accent) / 0.5);
+  }
+
+  /* Netflix-style Content Card */
+  .content-card {
+    @apply relative overflow-hidden rounded-md transition-all ease-out;
+    transition-duration: 200ms;
+    /* Faster transition */
+    transform-origin: center center;
+    will-change: transform;
+    /* Hardware acceleration hint */
+  }
+
+  .content-card:hover {
+    @apply z-50;
+    transform: scale(1.5);
+    transition-delay: 0.3s;
+    /* Slightly reduced delay for quicker hover feel */
+    box-shadow: var(--shadow-xl);
+  }
+
+  .content-card-expanded {
+    @apply absolute bg-card rounded-lg overflow-hidden;
+    min-width: 300px;
+    box-shadow: var(--shadow-xl);
+    z-index: 100;
+  }
+
+  /* Content Row */
+  .content-row {
+    @apply relative;
+  }
+
+  .content-row .scroll-arrow {
+    @apply absolute top-1/2 -translate-y-1/2 z-40;
+    @apply bg-background/80 backdrop-blur-sm rounded-full p-2;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .content-row:hover .scroll-arrow {
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  /* Shimmer Animation */
+  .shimmer {
+    background: linear-gradient(90deg,
+        hsl(var(--muted)) 0%,
+        hsl(var(--muted-foreground) / 0.1) 50%,
+        hsl(var(--muted)) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* Button Variants */
+  .btn-play {
+    @apply bg-red-600 text-white font-semibold px-6 py-2 rounded-md;
+    @apply hover:bg-red-700 transition-all duration-150;
+    /* Snappier button */
+    @apply flex items-center gap-2;
+  }
+
+  .btn-info {
+    @apply bg-muted/80 text-foreground font-semibold px-6 py-2 rounded-md;
+    @apply hover:bg-muted transition-all duration-150;
+    /* Snappier button */
+    @apply flex items-center gap-2;
+  }
+
+  .btn-icon {
+    @apply w-10 h-10 rounded-full border-2 border-muted-foreground/50;
+    @apply flex items-center justify-center;
+    @apply hover:border-foreground hover:bg-muted transition-all duration-150;
+    /* Snappier button */
+  }
+
+  /* Age Rating Badge */
+  .age-badge {
+    @apply px-2 py-0.5 border border-muted-foreground/50 text-sm font-medium;
+  }
+
+  /* Top 10 Badge */
+  .top-10-badge {
+    @apply absolute top-2 left-2 bg-destructive text-white text-xs font-bold px-2 py-1 rounded;
+  }
+}
+
+@layer utilities {
+
+  /* Animations */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    to {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+    }
+
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slide-out-right {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes pulse-glow {
+
+    0%,
+    100% {
+      box-shadow: 0 0 20px hsl(var(--skyflix-accent) / 0.3);
+    }
+
+    50% {
+      box-shadow: 0 0 40px hsl(var(--skyflix-accent) / 0.5);
+    }
+  }
+
+  /* Optimized Animation Classes - Faster & Snappier */
+  .animate-fade-in {
+    animation: fade-in 0.2s ease-out forwards;
+    will-change: opacity, transform;
+  }
+
+  .animate-fade-out {
+    animation: fade-out 0.2s ease-out forwards;
+    will-change: opacity, transform;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    /* Snappy ease-out */
+    will-change: opacity, transform;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: opacity, transform;
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.2s ease-out forwards;
+    will-change: transform;
+  }
+
+  .animate-slide-out-right {
+    animation: slide-out-right 0.2s ease-out forwards;
+    will-change: transform;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* Delay utilities for staggered animations - Adjusted for faster pace */
+  .delay-100 {
+    animation-delay: 50ms;
+  }
+
+  .delay-200 {
+    animation-delay: 100ms;
+  }
+
+  .delay-300 {
+    animation-delay: 150ms;
+  }
+
+  .delay-400 {
+    animation-delay: 200ms;
+  }
+
+  .delay-500 {
+    animation-delay: 250ms;
+  }
+
+  /* Gradient overlays */
+  .gradient-overlay-bottom {
+    background: linear-gradient(to top, hsl(var(--background)) 0%, transparent 100%);
+  }
+
+  .gradient-overlay-left {
+    background: linear-gradient(to right, hsl(var(--background)) 0%, transparent 50%);
+  }
+
+  .gradient-overlay-right {
+    background: linear-gradient(to left, hsl(var(--background)) 0%, transparent 50%);
+  }
+
+  .gradient-overlay-top {
+    background: linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 100%);
+  }
+
+  /* Hero gradient */
+  .hero-gradient {
+    background: linear-gradient(to right,
+        hsl(var(--background)) 0%,
+        hsl(var(--background) / 0.8) 20%,
+        transparent 50%),
+      linear-gradient(to top,
+        hsl(var(--background)) 0%,
+        hsl(var(--background) / 0.5) 30%,
+        transparent 60%);
+  }
+
+  /* Focus visible */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+}
+
+/* Video player page transition */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Responsive video container */
+.video-container {
+  position: relative;
+  padding-bottom: 56.25%;
+  /* 16:9 aspect ratio */
+  height: 0;
+  overflow: hidden;
+}
+
+.video-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.force-cursor-visible {
+  cursor: auto !important;
+}
+
+.force-cursor-visible * {
+  cursor: auto !important;
+}
+
+.cursor-hidden-forced {
+  cursor: none !important;
+}
+
+.cursor-hidden-forced * {
+  cursor: none !important;
+}
