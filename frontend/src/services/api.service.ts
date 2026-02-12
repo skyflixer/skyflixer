@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://skyflixer.netlify.app';
 
 /**
  * Axios instance configured for backend API

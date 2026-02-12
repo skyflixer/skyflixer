@@ -8,7 +8,7 @@ import PlayerSettingsSection from '@/components/admin/PlayerSettingsSection';
 import GitHubStatusSection from '@/components/admin/GitHubStatusSection';
 import DashboardOverview from '@/components/admin/DashboardOverview';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://skyflixer.netlify.app';
 
 type Section = 'dashboard' | 'edit' | 'player' | 'status';
 
