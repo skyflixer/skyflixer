@@ -80,7 +80,7 @@ export function VideoPlayerOverlay({
                 // First, try to fetch manual post from GitHub
                 const mediaType = type === 'movie' ? 'movies' : 'tv-shows';
                 console.log(`[VideoPlayer] Fetching manual post: ${mediaType}/${id}`);
-                const manualPostResponse = await fetch(`${BACKEND_URL}/api/admin/manual-post/${mediaType}/${id}`);
+                const manualPostResponse = await fetch(`${BACKEND_URL}/admin/manual-post/${mediaType}/${id}`);
 
                 console.log(`[VideoPlayer] Manual post response status:`, manualPostResponse.status);
 
@@ -165,7 +165,7 @@ export function VideoPlayerOverlay({
                     ? (contentInfo.release_date ? new Date(contentInfo.release_date).getFullYear() : 0)
                     : (contentInfo.first_air_date ? new Date(contentInfo.first_air_date).getFullYear() : 0);
 
-                const response = await fetch(`${BACKEND_URL}/api/videohosting/fetch`, {
+                const response = await fetch(`${BACKEND_URL}/videohosting/fetch`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

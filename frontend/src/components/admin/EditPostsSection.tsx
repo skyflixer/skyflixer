@@ -156,7 +156,7 @@ export default function EditPostsSection() {
 
         try {
             const response = await fetch(
-                `${BACKEND_URL}/api/admin/search`,
+                `${BACKEND_URL}/admin/search`,
                 {
                     method: 'POST',
                     headers: {
@@ -257,7 +257,7 @@ export default function EditPostsSection() {
         // LOAD EXISTING MANUAL POST FROM GITHUB
         try {
             const type = isTV ? 'tv-shows' : 'movies';
-            const response = await fetch(`${BACKEND_URL}/api/admin/manual-post/${type}/${item.id}`);
+            const response = await fetch(`${BACKEND_URL}/admin/manual-post/${type}/${item.id}`);
 
             if (response.ok) {
                 const data = await response.json();
@@ -378,7 +378,7 @@ export default function EditPostsSection() {
             const isTV = selectedPost.media_type === 'tv';
             const type = isTV ? 'tv-shows' : 'movies';
 
-            const response = await fetch(`${BACKEND_URL}/api/admin/delete-post`, {
+            const response = await fetch(`${BACKEND_URL}/admin/delete-post`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -457,7 +457,7 @@ export default function EditPostsSection() {
 
             const type = isTV ? 'tv-shows' : 'movies';
 
-            const response = await fetch(`${BACKEND_URL}/api/admin/save-post`, {
+            const response = await fetch(`${BACKEND_URL}/admin/save-post`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

@@ -8,7 +8,7 @@ export function usePlayerSettings() {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const response = await fetch(`${BACKEND_URL}/api/admin/player-settings`);
+                const response = await fetch(`${BACKEND_URL}/admin/player-settings`);
                 const data = await response.json();
                 if (data.success && data.data.defaultPlayer) {
                     setDefaultPlayer(data.data.defaultPlayer);

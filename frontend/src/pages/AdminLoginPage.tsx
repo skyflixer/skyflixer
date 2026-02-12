@@ -20,7 +20,7 @@ export default function AdminLoginPage() {
 
     const verifyToken = async (token: string) => {
         try {
-            const response = await fetch(`${BACKEND_URL}/api/admin/verify`, {
+            const response = await fetch(`${BACKEND_URL}/admin/verify`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -45,7 +45,7 @@ export default function AdminLoginPage() {
         setIsLoading(true);
 
         try {
-            const response = await fetch(`${BACKEND_URL}/api/admin/login`, {
+            const response = await fetch(`${BACKEND_URL}/admin/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

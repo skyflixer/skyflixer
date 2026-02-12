@@ -242,7 +242,7 @@ async function fetchTMDB<T>(
 
   // Call backend API instead of TMDB directly
   try {
-    const response = await apiClient.get(`/api/tmdb${endpoint}`, { params });
+    const response = await apiClient.get(`/tmdb${endpoint}`, { params });
     const data = response.data;
 
     if (useCache) {

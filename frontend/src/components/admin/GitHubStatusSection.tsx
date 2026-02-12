@@ -35,7 +35,7 @@ export default function GitHubStatusSection() {
         if (!token) return;
 
         try {
-            const response = await fetch(`${BACKEND_URL}/api/admin/github-status`, {
+            const response = await fetch(`${BACKEND_URL}/admin/github-status`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -57,7 +57,7 @@ export default function GitHubStatusSection() {
         if (!token) return;
 
         try {
-            const response = await fetch(`${BACKEND_URL}/api/admin/recent-activity`, {
+            const response = await fetch(`${BACKEND_URL}/admin/recent-activity`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

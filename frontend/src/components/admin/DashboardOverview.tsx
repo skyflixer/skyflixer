@@ -31,10 +31,10 @@ export default function DashboardOverview() {
         try {
             // Fetch GitHub status and player settings in parallel
             const [githubRes, playerRes] = await Promise.all([
-                fetch(`${BACKEND_URL}/api/admin/github-status`, {
+                fetch(`${BACKEND_URL}/admin/github-status`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }),
-                fetch(`${BACKEND_URL}/api/admin/player-settings`)
+                fetch(`${BACKEND_URL}/admin/player-settings`)
             ]);
 
             const githubData = await githubRes.json();

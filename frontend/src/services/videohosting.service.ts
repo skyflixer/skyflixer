@@ -42,7 +42,7 @@ export interface VideoHostingResponse {
  */
 export async function fetchVideoHosting(tmdbData: VideoHostingRequest): Promise<VideoHostingResponse> {
     try {
-        const response = await apiClient.post<VideoHostingResponse>('/api/videohosting/fetch', tmdbData);
+        const response = await apiClient.post<VideoHostingResponse>('/videohosting/fetch', tmdbData);
         return response.data;
     } catch (error: any) {
         console.error('Error fetching video hosting:', error);
@@ -55,7 +55,7 @@ export async function fetchVideoHosting(tmdbData: VideoHostingRequest): Promise<
  */
 export async function getVideoHostingStatus() {
     try {
-        const response = await apiClient.get('/api/videohosting/status');
+        const response = await apiClient.get('/videohosting/status');
         return response.data;
     } catch (error: any) {
         console.error('Error getting video hosting status:', error);

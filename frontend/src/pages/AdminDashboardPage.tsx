@@ -41,7 +41,7 @@ export default function AdminDashboardPage() {
         }
 
         try {
-            const response = await fetch(`${BACKEND_URL}/api/admin/verify`, {
+            const response = await fetch(`${BACKEND_URL}/admin/verify`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`

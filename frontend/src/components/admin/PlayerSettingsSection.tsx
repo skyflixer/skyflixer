@@ -24,7 +24,7 @@ export default function PlayerSettingsSection() {
 
     const fetchCurrentSettings = async () => {
         try {
-            const response = await fetch(`${BACKEND_URL}/api/admin/player-settings`);
+            const response = await fetch(`${BACKEND_URL}/admin/player-settings`);
             const data = await response.json();
 
             if (data.success) {
@@ -50,7 +50,7 @@ export default function PlayerSettingsSection() {
         setIsSaving(true);
 
         try {
-            const response = await fetch(`${BACKEND_URL}/api/admin/save-player-settings`, {
+            const response = await fetch(`${BACKEND_URL}/admin/save-player-settings`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
