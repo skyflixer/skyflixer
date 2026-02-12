@@ -61,7 +61,7 @@ Create a `.env` file in the `backend/` directory:
 ```
 PORT=5000
 TMDB_API_KEY=your_tmdb_api_key_here
-FRONTEND_URL=http://localhost:8080
+FRONTEND_URL=https://skyflixer.netlify.app
 NODE_ENV=development
 ```
 
@@ -84,7 +84,7 @@ npm run dev
 
 This will start:
 - **Backend API** on `http://localhost:5000`
-- **Frontend** on `http://localhost:8080`
+- **Frontend** on `https://skyflixer.netlify.app`
 
 ### Individual Servers
 

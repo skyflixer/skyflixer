@@ -255,7 +255,7 @@ The system normalizes titles (removes special chars, lowercases), so "Spider-Man
 Ensure backend CORS is configured in `backend/src/config/api.config.js`:
 ```javascript
 cors: {
-    origin: 'http://localhost:8080',  // Frontend URL
+    origin: 'https://skyflixer.netlify.app',  // Frontend URL
     // ...
 }
 ```
