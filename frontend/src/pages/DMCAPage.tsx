@@ -1,4 +1,5 @@
 import React from "react";
+import { SEO } from "@/components/SEO";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -12,8 +13,12 @@ export default function DMCAPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="DMCA Notice — Copyright Policy on Skyflixer"
+        description="Skyflixer DMCA and copyright policy. We respect intellectual property rights. Submit a DMCA takedown request for copyrighted content on our platform."
+      />
       <Navbar />
-      
+
       <div className="px-4 md:px-8 lg:px-12 py-8">
         {/* Back Button */}
         <button

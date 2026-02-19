@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { SEO } from "@/components/SEO";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { HeroBanner } from "@/components/HeroBanner";
@@ -140,6 +141,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Browse Trending Movies & TV Shows in 1080p"
+        description="Explore trending movies, top-rated TV shows & anime on Skyflixer. Stream in full 1080p HD for free — no account needed. Updated daily with new releases."
+      />
       <Navbar onSearchClick={() => setIsSearchOpen(true)} />
 
       {/* Hero Banner */}

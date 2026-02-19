@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { SEO } from "@/components/SEO";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ContentRow } from "@/components/ContentRow";
@@ -103,6 +104,10 @@ export default function TVShowsPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Stream TV Shows & Series Free in Full HD"
+        description="Binge-watch popular TV shows & series for free in full 1080p HD. Korean dramas, American series, British shows & more — stream every episode on Skyflixer."
+      />
       <Navbar onSearchClick={() => setIsSearchOpen(true)} />
 
       {/* Page Header */}

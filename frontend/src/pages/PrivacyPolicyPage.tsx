@@ -1,4 +1,5 @@
 import React from "react";
+import { SEO } from "@/components/SEO";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -12,8 +13,12 @@ export default function PrivacyPolicyPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Privacy Policy — Your Data on Skyflixer"
+        description="Read Skyflixer's privacy policy. We respect your privacy and do not collect personal data. Learn how we handle your information on our free streaming platform."
+      />
       <Navbar />
-      
+
       <div className="px-4 md:px-8 lg:px-12 py-8">
         {/* Back Button */}
         <button

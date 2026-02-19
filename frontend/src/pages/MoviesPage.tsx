@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { SEO } from "@/components/SEO";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ContentRow } from "@/components/ContentRow";
@@ -85,6 +86,10 @@ export default function MoviesPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Watch Free Movies Online in Full HD 1080p"
+        description="Browse & watch thousands of movies for free in full 1080p HD on Skyflixer. Hollywood, Bollywood, action, comedy, horror & more — all genres, zero cost."
+      />
       <Navbar onSearchClick={() => setIsSearchOpen(true)} />
 
       {/* Page Header */}

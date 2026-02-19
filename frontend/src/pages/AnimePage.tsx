@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { SEO } from "@/components/SEO";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ContentRow } from "@/components/ContentRow";
@@ -102,6 +103,10 @@ export default function AnimePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Watch Anime Free Online in Full HD — Subbed"
+        description="Stream the best anime for free in full 1080p HD. Subbed & dubbed — Shonen, romance, isekai, horror & more. New episodes updated daily on Skyflixer."
+      />
       <Navbar onSearchClick={() => setIsSearchOpen(true)} />
 
       {/* Page Header */}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SEO } from '@/components/SEO';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { getMovieDetails, getTVDetails, getImageUrl, IMAGE_SIZES } from '@/lib/tmdb';
 import { fetchVideoHosting, getAvailableServers, type ServerResponse } from '@/services/videohosting.service';
@@ -103,6 +104,10 @@ export default function DownloadPage() {
 
     return (
         <div className="min-h-screen bg-background relative overflow-hidden flex flex-col">
+            <SEO
+                title={`Download ${title} (${year}) Free in 1080p HD`}
+                description={`Download ${title} for free in full 1080p HD directly from Skyflixer. Fast download links — no signup required.`}
+            />
             {/* Background with overlay */}
             <div className="absolute inset-0 z-0">
                 <img

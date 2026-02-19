@@ -1,4 +1,5 @@
 import { useEffect, lazy, Suspense } from "react";
+import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -96,39 +97,41 @@ const App = () => {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <ScrollToTop />
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<ProfileSelection />} />
-              <Route path="/browse" element={<HomePage />} />
-              <Route path="/movies" element={<MoviesPage />} />
-              <Route path="/tv-shows" element={<TVShowsPage />} />
-              <Route path="/anime" element={<AnimePage />} />
-              <Route path="/watchlist" element={<WatchlistPage />} />
-              <Route path="/movie/:slug" element={<MovieDetailPage />} />
-              <Route path="/tv/:slug" element={<TVShowDetailPage />} />
-              <Route path="/tv/:slug/season-:season-episode-:episode" element={<TVShowDetailPage />} />
-              <Route path="/watch/:type/:id" element={<VideoPlayerPage />} />
-              <Route path="/download/:type/:id" element={<DownloadPage />} />
-              <Route path="/privacy" element={<PrivacyPolicyPage />} />
-              <Route path="/dmca" element={<DMCAPage />} />
-              <Route path="/credits" element={<CreditsPage />} />
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <ScrollToTop />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<ProfileSelection />} />
+                <Route path="/browse" element={<HomePage />} />
+                <Route path="/movies" element={<MoviesPage />} />
+                <Route path="/tv-shows" element={<TVShowsPage />} />
+                <Route path="/anime" element={<AnimePage />} />
+                <Route path="/watchlist" element={<WatchlistPage />} />
+                <Route path="/movie/:slug" element={<MovieDetailPage />} />
+                <Route path="/tv/:slug" element={<TVShowDetailPage />} />
+                <Route path="/tv/:slug/season-:season-episode-:episode" element={<TVShowDetailPage />} />
+                <Route path="/watch/:type/:id" element={<VideoPlayerPage />} />
+                <Route path="/download/:type/:id" element={<DownloadPage />} />
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                <Route path="/dmca" element={<DMCAPage />} />
+                <Route path="/credits" element={<CreditsPage />} />
 
-              {/* Admin Routes */}
-              <Route path="/zends3389" element={<AdminLoginPage />} />
-              <Route path="/zends3389/dashboard" element={<AdminDashboardPage />} />
+                {/* Admin Routes */}
+                <Route path="/zends3389" element={<AdminLoginPage />} />
+                <Route path="/zends3389/dashboard" element={<AdminDashboardPage />} />
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
   );
 };
 

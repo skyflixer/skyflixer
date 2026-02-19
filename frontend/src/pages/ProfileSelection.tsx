@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { SEO } from "@/components/SEO";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useProfiles } from "@/hooks/useProfiles";
@@ -166,6 +167,10 @@ export default function ProfileSelection() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12">
+      <SEO
+        title="Watch Free Movies, TV Shows & Anime Online"
+        description="Skyflixer — your free streaming hub. Watch the latest movies, binge TV shows & anime in full 1080p HD. No signup, no fees, just press play."
+      />
       {/* Title */}
       <h1 className="text-3xl md:text-4xl lg:text-5xl font-medium text-foreground mb-8">
         Who's watching?

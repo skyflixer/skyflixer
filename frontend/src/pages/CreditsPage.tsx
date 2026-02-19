@@ -1,4 +1,5 @@
 import React from "react";
+import { SEO } from "@/components/SEO";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -12,8 +13,12 @@ export default function CreditsPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Credits — About Skyflixer Streaming Platform"
+        description="Meet the team and technologies behind Skyflixer — the free 1080p HD streaming platform for movies, TV shows and anime. Powered by TMDB and open-source tools."
+      />
       <Navbar />
-      
+
       <div className="px-4 md:px-8 lg:px-12 py-8">
         {/* Back Button */}
         <button

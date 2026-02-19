@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { SEO } from "@/components/SEO";
 import { useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -241,6 +242,12 @@ export default function TVShowDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={`Watch ${show.name} Free in HD — All Seasons`}
+        description={show.overview?.slice(0, 155) + (show.overview && show.overview.length > 155 ? '...' : '') || `Stream ${show.name} for free in full 1080p HD on Skyflixer. All seasons & episodes — no signup needed.`}
+        ogImage={show.poster_path ? `https://image.tmdb.org/t/p/w500${show.poster_path}` : undefined}
+        ogType="video.tv_show"
+      />
       <Navbar onSearchClick={() => setIsSearchOpen(true)} />
 
       {/* Hero Section */}

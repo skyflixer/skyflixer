@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { SEO } from "@/components/SEO";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -58,6 +59,10 @@ export default function WatchlistPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="My Watchlist — Saved Movies & TV Shows"
+        description="Your personal watchlist on Skyflixer. Save movies, TV shows & anime to watch later. Keep track of everything you want to stream — all in one place."
+      />
       <Navbar onSearchClick={() => setIsSearchOpen(true)} />
 
       {/* Page Header */}

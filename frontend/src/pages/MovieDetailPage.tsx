@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { SEO } from "@/components/SEO";
 import { useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -145,6 +146,12 @@ export default function MovieDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={`Watch ${movie.title} (${releaseYear}) Free in HD`}
+        description={movie.overview?.slice(0, 155) + (movie.overview && movie.overview.length > 155 ? '...' : '') || `Watch ${movie.title} for free in full 1080p HD on Skyflixer. Stream now — no signup required.`}
+        ogImage={movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : undefined}
+        ogType="video.movie"
+      />
       <Navbar onSearchClick={() => setIsSearchOpen(true)} />
 
       {/* Hero Section */}

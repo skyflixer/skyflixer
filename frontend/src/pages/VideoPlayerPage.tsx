@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SEO } from '@/components/SEO';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { fetchVideoHosting, getFirstAvailableServer, getAvailableServers, type ServerResponse } from '@/services/videohosting.service';
 import { usePlayerSettings } from '@/hooks/usePlayerSettings';
@@ -187,6 +188,10 @@ export default function VideoPlayerPage() {
 
     return (
         <div className="fixed inset-0 z-[9999] bg-black flex items-center justify-center">
+            <SEO
+                title={contentInfo ? `Watch ${contentInfo.title || contentInfo.name} Free Online` : 'Watch Free Online'}
+                description={`Stream ${contentInfo?.title || contentInfo?.name || 'this title'} for free in full 1080p HD on Skyflixer. No signup, no fees — just press play.`}
+            />
             {/* Loading Spinner */}
             {isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
