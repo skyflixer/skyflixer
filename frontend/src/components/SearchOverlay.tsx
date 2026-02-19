@@ -32,7 +32,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
     }
   }, [isOpen, clearSearch]);
 
-  // Handle ESC key
+  // Handle ESC key and Lenis scroll control
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -43,11 +43,19 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
     if (isOpen) {
       document.addEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "hidden";
+      // Stop Lenis so it doesn't intercept scroll events inside the overlay
+      if ((window as any).lenis) {
+        (window as any).lenis.stop();
+      }
     }
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
+      // Restart Lenis when overlay closes
+      if ((window as any).lenis) {
+        (window as any).lenis.start();
+      }
     };
   }, [isOpen, onClose]);
 

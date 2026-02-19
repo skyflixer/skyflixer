@@ -52,6 +52,11 @@ export function VideoPlayerOverlay({
     useEffect(() => {
         if (!isOpen) return;
 
+        // Stop Lenis to prevent scroll-through behind the player
+        if ((window as any).lenis) {
+            (window as any).lenis.stop();
+        }
+
         const fetchContentInfo = async () => {
             try {
                 const { getMovieDetails, getTVDetails } = await import("@/lib/tmdb");
@@ -65,6 +70,13 @@ export function VideoPlayerOverlay({
         };
 
         fetchContentInfo();
+
+        return () => {
+            // Restart Lenis when player closes
+            if ((window as any).lenis) {
+                (window as any).lenis.start();
+            }
+        };
     }, [id, type, isOpen]);
 
     // Fetch video servers

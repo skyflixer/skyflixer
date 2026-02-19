@@ -128,7 +128,7 @@
   }
 
   .lenis.lenis-smooth [data-lenis-prevent] {
-    overscroll-behavior: contain;
+    overscroll-behavior: auto;
   }
 
   .lenis.lenis-stopped {

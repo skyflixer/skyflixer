@@ -64,6 +64,14 @@ export default function TVShowDetailPage() {
   });
   const { isInWatchlist, toggleWatchlist } = useWatchlist();
 
+  // Track whether we've already loaded data for the current slug to prevent re-loading
+  const loadedSlugRef = React.useRef<string | null>(null);
+  // Read searchParams once on mount via ref so changes don't trigger re-load
+  const searchParamsRef = React.useRef(searchParams);
+  searchParamsRef.current = searchParams;
+
+  // Main effect: load show data and handle initial player state
+  // Does NOT depend on searchParams — only on slug/URL changes
   useEffect(() => {
     const resolveAndLoad = async () => {
       let showId: number | null = location.state?.id;
@@ -78,14 +86,20 @@ export default function TVShowDetailPage() {
       }
 
       if (showId) {
-        loadShowData(showId);
+        // Only reload show data if the slug actually changed (not searchParams)
+        const currentSlug = slug || String(showId);
+        if (loadedSlugRef.current !== currentSlug) {
+          loadedSlugRef.current = currentSlug;
+          await loadShowData(showId);
+        }
 
         // Check if season/episode are in URL params first, then query params
         const seasonFromUrl = urlSeason ? parseInt(urlSeason) : null;
         const episodeFromUrl = urlEpisode ? parseInt(urlEpisode) : null;
-        const playParam = searchParams.get("play");
-        const seasonParam = searchParams.get("season");
-        const episodeParam = searchParams.get("episode");
+        const currentParams = searchParamsRef.current;
+        const playParam = currentParams.get("play");
+        const seasonParam = currentParams.get("season");
+        const episodeParam = currentParams.get("episode");
 
         // Auto-open player if season/episode in URL
         if (seasonFromUrl && episodeFromUrl) {
@@ -112,7 +126,7 @@ export default function TVShowDetailPage() {
     };
 
     resolveAndLoad();
-  }, [slug, location.state, urlSeason, urlEpisode, searchParams]);
+  }, [slug, location.state, urlSeason, urlEpisode]);
 
 
   useEffect(() => {
@@ -139,7 +153,7 @@ export default function TVShowDetailPage() {
       const shuffled = similarData.results.sort(() => Math.random() - 0.5);
       setSimilarShows(shuffled.slice(0, 15));
 
-      // Set initial season
+      // Set initial season only on first load (not when returning from player)
       if (showData.seasons.length > 0) {
         const firstRegularSeason = showData.seasons.find(s => s.season_number > 0);
         setSelectedSeason(firstRegularSeason?.season_number || 1);

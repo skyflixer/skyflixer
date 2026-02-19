@@ -39,7 +39,7 @@ export default function AnimePage() {
 
   const loadContent = async () => {
     setIsLoading(true);
-    
+
     try {
       const sectionConfigs = [
         { title: "Popular Anime", fetch: () => discoverTVShows({ with_genres: "16", with_origin_country: "JP", sort_by: "popularity.desc" }) },
@@ -96,18 +96,18 @@ export default function AnimePage() {
     } catch (error) {
       console.error("Failed to load anime:", error);
     }
-    
+
     setIsLoading(false);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar onSearchClick={() => setIsSearchOpen(true)} />
-      
+
       {/* Page Header */}
       <div className="px-4 md:px-8 lg:px-12 pt-6 pb-4">
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-6">Anime</h1>
-        
+
         {/* Category Filter Pills */}
         <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
           {ANIME_CATEGORIES.map((category) => (

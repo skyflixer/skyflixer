@@ -44,12 +44,12 @@ export default function TVShowsPage() {
 
   const loadContent = async () => {
     setIsLoading(true);
-    
+
     try {
       const filters: any = {};
       if (selectedGenre) filters.with_genres = String(selectedGenre);
       if (selectedCountry) filters.with_origin_country = selectedCountry;
-      
+
       const sectionConfigs = [
         { title: "Popular TV Shows", fetch: () => selectedGenre || selectedCountry ? discoverTVShows({ ...filters, sort_by: "popularity.desc" }) : getPopularTVShows() },
         { title: "Top Rated", fetch: () => selectedGenre || selectedCountry ? discoverTVShows({ ...filters, sort_by: "vote_average.desc", "vote_average.gte": 7 }) : getTopRatedTVShows() },
@@ -97,18 +97,18 @@ export default function TVShowsPage() {
     } catch (error) {
       console.error("Failed to load TV shows:", error);
     }
-    
+
     setIsLoading(false);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar onSearchClick={() => setIsSearchOpen(true)} />
-      
+
       {/* Page Header */}
       <div className="px-4 md:px-8 lg:px-12 pt-6 pb-4">
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-6">TV Shows</h1>
-        
+
         {/* Genre Filter Pills */}
         <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2 mb-4">
           <button

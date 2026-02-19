@@ -32,10 +32,10 @@ export default function MoviesPage() {
 
   const loadContent = async () => {
     setIsLoading(true);
-    
+
     try {
       const genreFilter = selectedGenre ? { with_genres: String(selectedGenre) } : {};
-      
+
       const sectionConfigs = [
         { title: "Popular Movies", fetch: () => selectedGenre ? discoverMovies({ ...genreFilter, sort_by: "popularity.desc" }) : getPopularMovies() },
         { title: "Top Rated", fetch: () => selectedGenre ? discoverMovies({ ...genreFilter, sort_by: "vote_average.desc", "vote_average.gte": 7 }) : getTopRatedMovies() },
@@ -79,18 +79,18 @@ export default function MoviesPage() {
     } catch (error) {
       console.error("Failed to load movies:", error);
     }
-    
+
     setIsLoading(false);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar onSearchClick={() => setIsSearchOpen(true)} />
-      
+
       {/* Page Header */}
       <div className="px-4 md:px-8 lg:px-12 pt-6 pb-4">
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-6">Movies</h1>
-        
+
         {/* Genre Filter Pills */}
         <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
           <button
