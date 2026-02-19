@@ -130,8 +130,7 @@ export function ContentRow({
           onScroll={checkScrollPosition}
           style={{
             scrollBehavior: "smooth",
-            overscrollBehavior: "contain",
-            WebkitOverflowScrolling: "touch",
+            overscrollBehaviorX: "contain",
             overflowY: "hidden",
             alignItems: "flex-start",
           }}
