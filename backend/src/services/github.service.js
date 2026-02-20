@@ -1,4 +1,6 @@
 import { Octokit } from '@octokit/rest';
+import { cacheGet, cacheSet, cacheDel, TTL } from './cache.service.js';
+
 
 class GitHubService {
     constructor() {
@@ -61,20 +63,25 @@ class GitHubService {
      * @returns {Promise<Object>} Post data
      */
     async getPost(slug, type) {
+        const cacheKey = `gh:post:${type}:${slug}`;
+        const cached = cacheGet(cacheKey);
+        if (cached !== null) return cached;
+
         try {
             const path = `manual-posts/${type}/${slug}.json`;
-
             const { data } = await this.octokit.repos.getContent({
                 owner: this.owner,
                 repo: this.repo,
                 path
             });
-
             const content = Buffer.from(data.content, 'base64').toString('utf-8');
-            return JSON.parse(content);
+            const post = JSON.parse(content);
+            cacheSet(cacheKey, post, TTL.MANUAL_POST);
+            return post;
         } catch (error) {
             if (error.status === 404) {
-                return null; // File not found
+                cacheSet(cacheKey, null, TTL.MANUAL_POST); // cache misses too
+                return null;
             }
             throw new Error(`Failed to fetch from GitHub: ${error.message}`);
         }
@@ -165,22 +172,26 @@ class GitHubService {
      * @returns {Promise<Object>} Player settings
      */
     async getPlayerSettings() {
+        const cacheKey = 'gh:player-settings';
+        const cached = cacheGet(cacheKey);
+        if (cached !== null) return cached;
+
         try {
             const path = 'config/player-settings.json';
-
             const { data } = await this.octokit.repos.getContent({
                 owner: this.owner,
                 repo: this.repo,
                 path
             });
-
             const content = Buffer.from(data.content, 'base64').toString('utf-8');
-            return JSON.parse(content);
+            const settings = JSON.parse(content);
+            cacheSet(cacheKey, settings, TTL.PLAYER_SETTINGS);
+            return settings;
         } catch (error) {
-            // Always return a safe default — whether the file doesn't exist,
-            // credentials are bad, or the repo is unreachable.
             console.warn('GitHub getPlayerSettings warning:', error.message);
-            return { defaultPlayer: 'streamp2p', lastUpdated: new Date().toISOString() };
+            const defaults = { defaultPlayer: 'streamp2p', lastUpdated: new Date().toISOString() };
+            cacheSet(cacheKey, defaults, TTL.PLAYER_SETTINGS);
+            return defaults;
         }
     }
 
@@ -189,13 +200,16 @@ class GitHubService {
      * @returns {Promise<Object>} Repository status
      */
     async getRepoStatus() {
+        const cacheKey = 'gh:repo-status';
+        const cached = cacheGet(cacheKey);
+        if (cached !== null) return cached;
+
         try {
             const { data: repo } = await this.octokit.repos.get({
                 owner: this.owner,
                 repo: this.repo
             });
 
-            // Get manual-posts directory contents
             let manualPostsCount = 0;
             try {
                 const { data: movies } = await this.octokit.repos.getContent({
@@ -210,22 +224,19 @@ class GitHubService {
                 });
                 manualPostsCount = (Array.isArray(movies) ? movies.length : 0) +
                     (Array.isArray(tvShows) ? tvShows.length : 0);
-            } catch (error) {
-                // Directory might not exist yet
-            }
+            } catch (error) { /* Directory might not exist yet */ }
 
-            return {
+            const result = {
                 connected: true,
                 repository: `${this.owner}/${this.repo}`,
                 manualPostsCount,
                 lastSync: new Date().toISOString(),
                 updatedAt: repo.updated_at
             };
+            cacheSet(cacheKey, result, TTL.GITHUB_STATUS);
+            return result;
         } catch (error) {
-            return {
-                connected: false,
-                error: error.message
-            };
+            return { connected: false, error: error.message };
         }
     }
 

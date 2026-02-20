@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { videoHostingConfig, timeoutConfig } from '../config/videohosting.config.js';
+import { cacheGet, cacheSet, TTL } from './cache.service.js';
 
 /**
  * Parse video title from API response
@@ -351,10 +352,20 @@ export async function fetchFromHost(hostName, tmdbData) {
 }
 
 /**
- * Fetch from all video hosting services concurrently
+ * Fetch from all video hosting services concurrently.
+ * Results are cached per (title+type+year/season/episode) for 10 minutes.
  */
 export async function fetchAllHosts(tmdbData) {
-    console.log('Fetching from all hosts for:', tmdbData);
+    // Build a deterministic cache key
+    const cacheKey = `vh:${tmdbData.type}:${tmdbData.title}:${tmdbData.year || ''}:${tmdbData.season || ''}:${tmdbData.episode || ''}`;
+
+    const cached = cacheGet(cacheKey);
+    if (cached) {
+        console.log(`[cache HIT] ${cacheKey}`);
+        return cached;
+    }
+
+    console.log(`[cache MISS] Fetching from all hosts for:`, tmdbData);
 
     const hosts = ['streamp2p', 'seekstreaming', 'upnshare', 'rpmshare'];
 
@@ -371,9 +382,16 @@ export async function fetchAllHosts(tmdbData) {
     const availableCount = results.filter(r => r.available).length;
     console.log(`Found ${availableCount} available server(s)`);
 
-    return {
+    const finalResult = {
         servers: organizedResults,
         availableCount,
         tmdbData,
     };
+
+    // Only cache if at least one server was found
+    if (availableCount > 0) {
+        cacheSet(cacheKey, finalResult, TTL.VIDEO_RESULT);
+    }
+
+    return finalResult;
 }

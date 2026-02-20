@@ -49,138 +49,120 @@ export function VideoPlayerOverlay({
         'Rpmshare': { displayName: 'Rpmshare', icon: 'rpm', color: '#ef4444', meta: 'RpmShare · ONLINE' }
     };
 
-    // Fetch content info
+    // Fetch content info AND servers in parallel for fastest load
     useEffect(() => {
-        if (!isOpen) return;
+        if (!isOpen || !id) return;
 
-        // Stop Lenis to prevent scroll-through behind the player
-        if ((window as any).lenis) {
-            (window as any).lenis.stop();
-        }
+        // Stop Lenis
+        if ((window as any).lenis) (window as any).lenis.stop();
 
-        const fetchContentInfo = async () => {
-            try {
-                const { getMovieDetails, getTVDetails } = await import("@/lib/tmdb");
-                const data = type === 'movie'
-                    ? await getMovieDetails(Number(id))
-                    : await getTVDetails(Number(id));
-                setContentInfo(data);
-            } catch (error) {
-                console.error('Error fetching content info:', error);
-            }
-        };
-
-        fetchContentInfo();
-
-        return () => {
-            // Restart Lenis when player closes
-            if ((window as any).lenis) {
-                (window as any).lenis.start();
-            }
-        };
-    }, [id, type, isOpen]);
-
-    // Fetch video servers
-    useEffect(() => {
-        if (!isOpen || !contentInfo) return;
-
-        const fetchServers = async () => {
+        const fetchEverything = async () => {
             setIsFetchingServers(true);
 
-            try {
-                // First, try to fetch manual post from GitHub
-                const mediaType = type === 'movie' ? 'movies' : 'tv-shows';
-                console.log(`[VideoPlayer] Fetching manual post: ${mediaType}/${id}`);
-                const manualPostResponse = await fetch(`${BACKEND_URL}/admin/manual-post/${mediaType}/${id}`);
+            // --- Run TMDB + Manual Post fetches in parallel ---
+            const mediaType = type === 'movie' ? 'movies' : 'tv-shows';
+            const manualCacheKey = `skyflix_manual:${mediaType}:${id}`;
 
-                console.log(`[VideoPlayer] Manual post response status:`, manualPostResponse.status);
+            const getCachedManual = () => {
+                try {
+                    const raw = sessionStorage.getItem(manualCacheKey);
+                    if (!raw) return undefined;
+                    const { value, expiresAt } = JSON.parse(raw);
+                    if (Date.now() > expiresAt) { sessionStorage.removeItem(manualCacheKey); return undefined; }
+                    return value; // null means "confirmed not found"
+                } catch { return undefined; }
+            };
 
-                if (manualPostResponse.ok) {
-                    const manualData = await manualPostResponse.json();
-                    console.log(`[VideoPlayer] Manual post data:`, manualData);
+            const setCachedManual = (value: any) => {
+                try {
+                    sessionStorage.setItem(manualCacheKey, JSON.stringify({
+                        value,
+                        expiresAt: Date.now() + 5 * 60 * 1000, // 5 min
+                    }));
+                } catch { }
+            };
 
-                    if (manualData.success && manualData.data) {
-                        const manualPost = manualData.data;
-                        const servers: VideoServer[] = [];
+            // Fetch TMDB and manual post simultaneously
+            const cachedManual = getCachedManual();
 
-                        // Support both 'playerLinks' (new) and 'players' (old) for backward compatibility
-                        const playerLinks = manualPost.playerLinks || manualPost.players;
-                        console.log(`[VideoPlayer] Player links found:`, playerLinks);
+            const [tmdbResult, manualResult] = await Promise.allSettled([
+                // 1. TMDB content info
+                (async () => {
+                    const { getMovieDetails, getTVDetails } = await import('@/lib/tmdb');
+                    return type === 'movie' ? getMovieDetails(Number(id)) : getTVDetails(Number(id));
+                })(),
+                // 2. Manual post (skip network if cached)
+                cachedManual !== undefined
+                    ? Promise.resolve(cachedManual)
+                    : (async () => {
+                        const res = await fetch(`${BACKEND_URL}/admin/manual-post/${mediaType}/${id}`);
+                        if (res.ok) {
+                            const d = await res.json();
+                            const post = d.success && d.data ? d.data : null;
+                            setCachedManual(post);
+                            return post;
+                        }
+                        setCachedManual(null);
+                        return null;
+                    })()
+            ]);
 
-                        // Process manual player links
-                        if (type === 'movie' && playerLinks) {
-                            // Movie player links
-                            Object.keys(serverConfigs).forEach(key => {
-                                const serverKey = key.toLowerCase();
-                                const playerLink = playerLinks[serverKey];
+            const tmdbData = tmdbResult.status === 'fulfilled' ? tmdbResult.value : null;
+            const manualPost = manualResult.status === 'fulfilled' ? manualResult.value : null;
 
-                                console.log(`[VideoPlayer] Checking ${key}:`, playerLink);
+            setContentInfo(tmdbData);
 
-                                if (playerLink?.videoLink) {
-                                    const config = serverConfigs[key as keyof typeof serverConfigs];
-                                    servers.push({
-                                        name: key,
-                                        displayName: config.displayName,
-                                        embedUrl: playerLink.videoLink,
-                                        downloadUrl: playerLink.downloadLink || undefined,
-                                        icon: config.icon,
-                                        color: config.color
-                                    });
-                                    console.log(`[VideoPlayer] Added server: ${key} with URL: ${playerLink.videoLink}`);
-                                }
-                            });
-                        } else if (type === 'tv' && manualPost.seasons) {
-                            // TV show episode links
-                            const seasonData = manualPost.seasons?.find((s: any) => s.seasonNumber === season);
-                            const episodeData = seasonData?.episodes?.find((e: any) => e.episodeNumber === episode);
+            // --- Process manual post if found ---
+            if (manualPost) {
+                const servers: VideoServer[] = [];
+                const playerLinks = manualPost.playerLinks || manualPost.players;
 
-                            if (episodeData?.playerLinks) {
-                                Object.keys(serverConfigs).forEach(key => {
-                                    const serverKey = key.toLowerCase();
-                                    const playerLink = episodeData.playerLinks[serverKey];
-
-                                    if (playerLink?.videoLink) {
-                                        const config = serverConfigs[key as keyof typeof serverConfigs];
-                                        servers.push({
-                                            name: key,
-                                            displayName: config.displayName,
-                                            embedUrl: playerLink.videoLink,
-                                            downloadUrl: playerLink.downloadLink || undefined,
-                                            icon: config.icon,
-                                            color: config.color
-                                        });
-                                    }
-                                });
+                if (type === 'movie' && playerLinks) {
+                    Object.keys(serverConfigs).forEach(key => {
+                        const playerLink = playerLinks[key.toLowerCase()];
+                        if (playerLink?.videoLink) {
+                            const config = serverConfigs[key as keyof typeof serverConfigs];
+                            servers.push({ name: key, displayName: config.displayName, embedUrl: playerLink.videoLink, downloadUrl: playerLink.downloadLink || undefined, icon: config.icon, color: config.color });
+                        }
+                    });
+                } else if (type === 'tv' && manualPost.seasons) {
+                    const seasonData = manualPost.seasons?.find((s: any) => s.seasonNumber === season);
+                    const episodeData = seasonData?.episodes?.find((e: any) => e.episodeNumber === episode);
+                    if (episodeData?.playerLinks) {
+                        Object.keys(serverConfigs).forEach(key => {
+                            const playerLink = episodeData.playerLinks[key.toLowerCase()];
+                            if (playerLink?.videoLink) {
+                                const config = serverConfigs[key as keyof typeof serverConfigs];
+                                servers.push({ name: key, displayName: config.displayName, embedUrl: playerLink.videoLink, downloadUrl: playerLink.downloadLink || undefined, icon: config.icon, color: config.color });
                             }
-                        }
-
-                        // If manual post has player links, use them
-                        if (servers.length > 0) {
-                            setAvailableServers(servers);
-
-                            const defaultIndex = servers.findIndex(s =>
-                                s.name.toLowerCase() === defaultPlayer.toLowerCase()
-                            );
-                            const initialIndex = defaultIndex >= 0 ? defaultIndex : 0;
-
-                            setCurrentUrl(servers[initialIndex].embedUrl);
-                            setSelectedIndex(initialIndex);
-                            setIsFetchingServers(false);
-                            return; // Exit early - we have manual links
-                        }
+                        });
                     }
                 }
 
-                // Fallback to video hosting API if no manual post found
+                if (servers.length > 0) {
+                    setAvailableServers(servers);
+                    const defaultIndex = servers.findIndex(s => s.name.toLowerCase() === defaultPlayer.toLowerCase());
+                    const idx = defaultIndex >= 0 ? defaultIndex : 0;
+                    setCurrentUrl(servers[idx].embedUrl);
+                    setSelectedIndex(idx);
+                    setIsFetchingServers(false);
+                    return;
+                }
+            }
+
+            // --- Fallback: video hosting API ---
+            try {
+                if (!tmdbData) throw new Error('No TMDB data');
+                const media = tmdbData as any;
                 const mediaYear = type === 'movie'
-                    ? (contentInfo.release_date ? new Date(contentInfo.release_date).getFullYear() : 0)
-                    : (contentInfo.first_air_date ? new Date(contentInfo.first_air_date).getFullYear() : 0);
+                    ? (media.release_date ? new Date(media.release_date).getFullYear() : 0)
+                    : (media.first_air_date ? new Date(media.first_air_date).getFullYear() : 0);
 
                 const response = await fetch(`${BACKEND_URL}/videohosting/fetch`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        title: contentInfo.title || contentInfo.name,
+                        title: media.title || media.name,
                         year: mediaYear,
                         type: type === 'movie' ? 'movie' : 'series',
                         ...(type === 'tv' && { season, episode })
@@ -188,49 +170,30 @@ export function VideoPlayerOverlay({
                 });
 
                 if (!response.ok) throw new Error(`API error: ${response.status}`);
-
                 const data = await response.json();
                 const servers: VideoServer[] = [];
 
-                // Only add servers that are actually available
                 Object.keys(serverConfigs).forEach(key => {
                     const serverKey = key.toLowerCase();
                     if (data.servers?.[serverKey]?.available) {
                         const config = serverConfigs[key as keyof typeof serverConfigs];
-                        servers.push({
-                            name: key,
-                            displayName: config.displayName,
-                            embedUrl: data.servers[serverKey].embedUrl,
-                            downloadUrl: data.servers[serverKey].downloadUrl,
-                            icon: config.icon,
-                            color: config.color
-                        });
+                        servers.push({ name: key, displayName: config.displayName, embedUrl: data.servers[serverKey].embedUrl, downloadUrl: data.servers[serverKey].downloadUrl, icon: config.icon, color: config.color });
                     }
                 });
 
                 setAvailableServers(servers);
-
                 if (servers.length > 0) {
-                    // Find index of default player
-                    const defaultIndex = servers.findIndex(s =>
-                        s.name.toLowerCase() === defaultPlayer.toLowerCase()
-                    );
-
-                    const initialIndex = defaultIndex >= 0 ? defaultIndex : 0;
-
-                    setCurrentUrl(servers[initialIndex].embedUrl);
-                    setSelectedIndex(initialIndex);
+                    const defaultIndex = servers.findIndex(s => s.name.toLowerCase() === defaultPlayer.toLowerCase());
+                    const idx = defaultIndex >= 0 ? defaultIndex : 0;
+                    setCurrentUrl(servers[idx].embedUrl);
+                    setSelectedIndex(idx);
                 } else {
-                    // Fallback to Videasy
                     const vidsyUrl = type === 'movie'
                         ? `https://player.videasy.net/movie/${id}?overlay=true`
                         : `https://player.videasy.net/tv/${id}/${season}/${episode}?overlay=true`;
                     setCurrentUrl(vidsyUrl);
                 }
-
             } catch (error) {
-                console.error('Error fetching servers:', error);
-                // Fallback
                 const vidsyUrl = type === 'movie'
                     ? `https://player.videasy.net/movie/${id}?overlay=true`
                     : `https://player.videasy.net/tv/${id}/${season}/${episode}?overlay=true`;
@@ -240,8 +203,12 @@ export function VideoPlayerOverlay({
             }
         };
 
-        fetchServers();
-    }, [contentInfo, type, id, season, episode, isOpen, defaultPlayer]);
+        fetchEverything();
+
+        return () => {
+            if ((window as any).lenis) (window as any).lenis.start();
+        };
+    }, [id, type, season, episode, isOpen, defaultPlayer]);
 
     // Track progress
     useEffect(() => {
