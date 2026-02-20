@@ -353,6 +353,8 @@ export async function fetchFromHost(hostName, tmdbData) {
 
 /**
  * Fetch from all video hosting services concurrently.
+ * A 25-second global deadline ensures the response always finishes before
+ * HuggingFace's 30-second proxy timeout kills the connection.
  * Results are cached per (title+type+year/season/episode) for 10 minutes.
  */
 export async function fetchAllHosts(tmdbData) {
@@ -369,17 +371,37 @@ export async function fetchAllHosts(tmdbData) {
 
     const hosts = ['streamp2p', 'seekstreaming', 'upnshare', 'rpmshare'];
 
-    // Fetch from all hosts in parallel
-    const promises = hosts.map(host => fetchFromHost(host, tmdbData));
-    const results = await Promise.all(promises);
+    // Race all hosts against a 25s global deadline (HF proxy kills at 30s)
+    const GLOBAL_DEADLINE_MS = 25000;
+
+    const deadline = new Promise(resolve =>
+        setTimeout(() => {
+            console.warn('[fetchAllHosts] Global deadline reached — returning partial results');
+            resolve('DEADLINE');
+        }, GLOBAL_DEADLINE_MS)
+    );
+
+    const hostPromises = Promise.allSettled(
+        hosts.map(host => fetchFromHost(host, tmdbData))
+    );
+
+    const raceResult = await Promise.race([hostPromises, deadline]);
+
+    // If deadline fired, mark all hosts as unavailable rather than hanging
+    const settled = raceResult === 'DEADLINE'
+        ? hosts.map(h => ({ status: 'fulfilled', value: { hostName: h, available: false, error: 'Timeout' } }))
+        : raceResult;
 
     // Organize results by host name
     const organizedResults = {};
-    results.forEach(result => {
-        organizedResults[result.hostName] = result;
+    settled.forEach(r => {
+        const result = r.status === 'fulfilled'
+            ? r.value
+            : { hostName: 'unknown', available: false, error: r.reason?.message };
+        if (result.hostName) organizedResults[result.hostName] = result;
     });
 
-    const availableCount = results.filter(r => r.available).length;
+    const availableCount = settled.filter(r => r.status === 'fulfilled' && r.value?.available).length;
     console.log(`Found ${availableCount} available server(s)`);
 
     const finalResult = {

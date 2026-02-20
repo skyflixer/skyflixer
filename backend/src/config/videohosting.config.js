@@ -81,8 +81,10 @@ export const videoHostingConfig = {
 
 /**
  * Timeout settings
+ * HuggingFace Spaces has a ~30s hard proxy timeout.
+ * Keep per-request timeouts short so all-host parallel scans finish in time.
  */
 export const timeoutConfig = {
-    primaryTimeout: 15000, // 15 seconds — allows full multi-page scan of primary API
-    fallbackTimeout: 10000, // 10 seconds — allows full multi-page scan of fallback API
+    primaryTimeout: 5000,  // 5s per page request
+    fallbackTimeout: 4000, // 4s per page request
 };
