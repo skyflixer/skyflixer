@@ -83,6 +83,6 @@ export const videoHostingConfig = {
  * Timeout settings
  */
 export const timeoutConfig = {
-    primaryTimeout: 3000, // 3 seconds for primary API
-    fallbackTimeout: 2000, // 2 seconds for fallback API
+    primaryTimeout: 15000, // 15 seconds — allows full multi-page scan of primary API
+    fallbackTimeout: 10000, // 10 seconds — allows full multi-page scan of fallback API
 };

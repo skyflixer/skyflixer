@@ -279,7 +279,7 @@ export function VideoPlayerOverlay({
         const loadingTimeout = setTimeout(() => {
             setIsLoading(false);
             setIsFetchingServers(false);
-        }, 1000);
+        }, 30000); // 30s — must allow full paginated scan across all pages
 
         return () => clearTimeout(loadingTimeout);
     }, [isOpen]);

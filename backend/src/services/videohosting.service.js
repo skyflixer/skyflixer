@@ -98,8 +98,174 @@ export function matchContent(tmdbData, parsedVideo) {
 }
 
 /**
+ * Build the correct embed and download base URL for a given host name
+ */
+function getHostBaseUrls(hostName) {
+    switch (hostName) {
+        case 'streamp2p':
+            return {
+                embedBase: 'https://skyflixerpro.p2pplay.pro/#',
+                downloadBase: 'https://skyflixerpro.p2pplay.pro/#',
+            };
+        case 'seekstreaming':
+            return {
+                embedBase: 'https://skyflixer.seekplayer.me/#',
+                downloadBase: 'https://skyflixer.seekplayer.me/#',
+            };
+        case 'upnshare':
+            return {
+                embedBase: 'https://skyflixer.upn.one/#',
+                downloadBase: 'https://skyflixer.upn.one/#',
+            };
+        case 'rpmshare':
+            return {
+                embedBase: 'https://skyflixer.rpmplay.me/#',
+                downloadBase: 'https://skyflixer.rpmplay.me/#',
+            };
+        default:
+            return {
+                embedBase: 'https://skyflixerpro.p2pplay.pro/#',
+                downloadBase: 'https://skyflixerpro.p2pplay.pro/#',
+            };
+    }
+}
+
+/**
+ * Fetch ALL pages from a paginated API endpoint.
+ * 
+ * Strategy:
+ *  1. Fetch page 1.
+ *  2. Determine total pages from metadata.maxPage / total_pages / last_page.
+ *  3. Fetch all remaining pages in parallel.
+ *  4. Return a flat array of all video objects.
+ */
+async function fetchAllPages(endpoint, headers, timeout) {
+    // --- Page 1 ---
+    const page1Response = await axios.get(endpoint, {
+        params: { page: 1 },
+        headers,
+        timeout,
+    });
+
+    const page1Data = page1Response.data;
+
+    // Extract videos from page 1
+    let page1Videos = [];
+    if (Array.isArray(page1Data)) {
+        // Some APIs return a flat array (no pagination metadata)
+        return page1Data;
+    } else if (page1Data.data && Array.isArray(page1Data.data)) {
+        page1Videos = page1Data.data;
+    } else if (page1Data.results && Array.isArray(page1Data.results)) {
+        page1Videos = page1Data.results;
+    }
+
+    // --- Determine total pages ---
+    const meta = page1Data.metadata || page1Data.meta || page1Data;
+    const totalPages =
+        meta.maxPage ||
+        meta.max_page ||
+        meta.total_pages ||
+        meta.last_page ||
+        meta.totalPages ||
+        1;
+
+    console.log(`[fetchAllPages] endpoint=${endpoint} totalPages=${totalPages}`);
+
+    if (totalPages <= 1) {
+        return page1Videos;
+    }
+
+    // --- Fetch remaining pages in parallel ---
+    const pageNumbers = [];
+    for (let p = 2; p <= totalPages; p++) {
+        pageNumbers.push(p);
+    }
+
+    const pageResponses = await Promise.all(
+        pageNumbers.map(p =>
+            axios.get(endpoint, {
+                params: { page: p },
+                headers,
+                timeout,
+            }).catch(err => {
+                console.warn(`[fetchAllPages] p=${p} failed: ${err.message}`);
+                return null;
+            })
+        )
+    );
+
+    // Combine all videos
+    let allVideos = [...page1Videos];
+    for (const res of pageResponses) {
+        if (!res) continue;
+        const d = res.data;
+        if (d.data && Array.isArray(d.data)) {
+            allVideos = allVideos.concat(d.data);
+        } else if (d.results && Array.isArray(d.results)) {
+            allVideos = allVideos.concat(d.results);
+        } else if (Array.isArray(d)) {
+            allVideos = allVideos.concat(d);
+        }
+    }
+
+    console.log(`[fetchAllPages] total videos fetched: ${allVideos.length}`);
+    return allVideos;
+}
+
+/**
+ * Build full video result after a match is found.
+ * Fetches the video detail endpoint to get embed/download URLs.
+ */
+async function buildVideoResult(hostName, video, apiEndpoint, headers, timeout) {
+    const { embedBase, downloadBase } = getHostBaseUrls(hostName);
+    const parsed = parseVideoTitle(video.name || video.title);
+
+    try {
+        const detailsResponse = await axios.get(`${apiEndpoint}/${video.id}`, {
+            headers,
+            timeout,
+        });
+
+        const fullVideo = detailsResponse.data;
+        console.log(`[${hostName}] Full details: embed=${fullVideo.embed ? 'FOUND' : 'EMPTY'} download=${fullVideo.download ? 'FOUND' : 'EMPTY'}`);
+
+        const embedUrl = extractEmbedUrl(fullVideo.embed || fullVideo.embedUrl || '') ||
+            `${embedBase}${video.id}`;
+
+        const downloadUrl = fullVideo.download || fullVideo.downloadUrl || fullVideo.premiumDownload ||
+            `${downloadBase}${video.id}&dl=1`;
+
+        return {
+            hostName,
+            available: true,
+            embedUrl,
+            downloadUrl,
+            videoData: {
+                id: video.id,
+                name: fullVideo.name || video.name || video.title,
+                ...parsed,
+            },
+        };
+    } catch (detailsError) {
+        console.warn(`[${hostName}] Detail fetch failed (${detailsError.message}), constructing URLs from ID`);
+        return {
+            hostName,
+            available: true,
+            embedUrl: `${embedBase}${video.id}`,
+            downloadUrl: `${downloadBase}${video.id}&dl=1`,
+            videoData: {
+                id: video.id,
+                name: video.name || video.title,
+                ...parsed,
+            },
+        };
+    }
+}
+
+/**
  * Fetch video from a single hosting service
- * Tries primary API first, falls back to fallback API on failure
+ * Scans ALL pages, then tries fallback if primary yields no match.
  */
 export async function fetchFromHost(hostName, tmdbData) {
     const config = videoHostingConfig[hostName];
@@ -112,112 +278,29 @@ export async function fetchFromHost(hostName, tmdbData) {
         };
     }
 
-    // Try primary API first
+    // ── PRIMARY ──────────────────────────────────────────────────────────────
     try {
-        console.log(`[${hostName}] Trying primary API...`);
+        console.log(`[${hostName}] Scanning ALL pages on primary API...`);
 
-        // Fetch ALL videos (Streamp2p pattern - no query params, get full list)
-        const response = await axios.get(config.primary.endpoint, {
-            headers: config.primary.headers,
-            timeout: timeoutConfig.primaryTimeout,
-        });
+        const videos = await fetchAllPages(
+            config.primary.endpoint,
+            config.primary.headers,
+            timeoutConfig.primaryTimeout
+        );
 
-        // Response can be either array directly or object with results/data field
-        let videos = [];
-        if (Array.isArray(response.data)) {
-            videos = response.data;
-        } else if (response.data.results && Array.isArray(response.data.results)) {
-            videos = response.data.results;
-        } else if (response.data.data && Array.isArray(response.data.data)) {
-            videos = response.data.data;
-        }
+        console.log(`[${hostName}] Primary API: ${videos.length} total videos across all pages`);
 
-        console.log(`[${hostName}] Primary API returned ${videos.length} videos`);
-
-        // Find matching video by looping through all
         for (const video of videos) {
             const parsed = parseVideoTitle(video.name || video.title);
-
             if (matchContent(tmdbData, parsed)) {
-                console.log(`[${hostName}] Match found in primary API:`, video.name || video.title);
-                console.log(`[${hostName}] Video ID:`, video.id);
-
-                // Make a second API call to get FULL video details (includes embed/download)
-                try {
-                    console.log(`[${hostName}] Fetching full video details for ID: ${video.id}`);
-                    const detailsResponse = await axios.get(`${config.primary.endpoint}/${video.id}`, {
-                        headers: config.primary.headers,
-                        timeout: timeoutConfig.primaryTimeout,
-                    });
-
-                    const fullVideo = detailsResponse.data;
-                    console.log(`[${hostName}] Full video details retrieved`);
-                    console.log(`[${hostName}] Embed:`, fullVideo.embed ? 'FOUND' : 'EMPTY');
-                    console.log(`[${hostName}] Download:`, fullVideo.download ? 'FOUND' : 'EMPTY');
-
-                    // Extract or construct embed URL
-                    let embedUrl = extractEmbedUrl(fullVideo.embed || fullVideo.embedUrl || '');
-
-                    // If still no embed URL, construct it from ID based on host
-                    if (!embedUrl && video.id) {
-                        if (hostName === 'streamp2p') {
-                            embedUrl = `https://skyflixerpro.p2pplay.pro/#${video.id}`;
-                        } else if (hostName === 'seekstreaming') {
-                            embedUrl = `https://skyflixer.seekplayer.me/#${video.id}`;
-                        } else if (hostName === 'upnshare') {
-                            embedUrl = `https://skyflixer.upn.one/#${video.id}`;
-                        } else if (hostName === 'rpmshare') {
-                            embedUrl = `https://skyflixer.rpmplay.me/#${video.id}`;
-                        }
-                        console.log(`[${hostName}] Constructed embed URL from ID:`, embedUrl);
-                    }
-
-                    // Extract or construct download URL
-                    let downloadUrl = fullVideo.download || fullVideo.downloadUrl || fullVideo.premiumDownload || '';
-
-                    // If still no download URL, construct it from ID based on host
-                    if (!downloadUrl && video.id) {
-                        if (hostName === 'streamp2p') {
-                            downloadUrl = `https://skyflixerpro.p2pplay.pro/#${video.id}&dl=1`;
-                        } else if (hostName === 'seekstreaming') {
-                            downloadUrl = `https://skyflixer.seekplayer.me/#${video.id}&dl=1`;
-                        } else if (hostName === 'upnshare') {
-                            downloadUrl = `https://skyflixer.upn.one/#${video.id}&dl=1`;
-                        } else if (hostName === 'rpmshare') {
-                            downloadUrl = `https://skyflixer.rpmplay.me/#${video.id}&dl=1`;
-                        }
-                        console.log(`[${hostName}] Constructed download URL from ID:`, downloadUrl);
-                    }
-
-                    return {
-                        hostName,
-                        available: true,
-                        embedUrl,
-                        downloadUrl,
-                        source: 'primary',
-                        videoData: {
-                            id: video.id,
-                            name: fullVideo.name || video.name || video.title,
-                            ...parsed,
-                        },
-                    };
-                } catch (detailsError) {
-                    console.error(`[${hostName}] Failed to fetch full details, using constructed URLs:`, detailsError.message);
-
-                    // Fallback: construct URLs from ID
-                    return {
-                        hostName,
-                        available: true,
-                        embedUrl: `https://skyflixerpro.p2pplay.pro/#${video.id}`,
-                        downloadUrl: `https://skyflixerpro.p2pplay.pro/#${video.id}&dl=1`,
-                        source: 'primary',
-                        videoData: {
-                            id: video.id,
-                            name: video.name || video.title,
-                            ...parsed,
-                        },
-                    };
-                }
+                console.log(`[${hostName}] Match found in primary: "${video.name || video.title}" (id=${video.id})`);
+                const result = await buildVideoResult(
+                    hostName, video,
+                    config.primary.endpoint,
+                    config.primary.headers,
+                    timeoutConfig.primaryTimeout
+                );
+                return { ...result, source: 'primary' };
             }
         }
 
@@ -225,112 +308,31 @@ export async function fetchFromHost(hostName, tmdbData) {
         throw new Error('No matching video found in primary API');
 
     } catch (primaryError) {
-        console.log(`[${hostName}] Primary API failed:`, primaryError.message);
+        console.log(`[${hostName}] Primary failed: ${primaryError.message}`);
 
-        // Try fallback API
+        // ── FALLBACK ──────────────────────────────────────────────────────────
         try {
-            console.log(`[${hostName}] Trying fallback API...`);
+            console.log(`[${hostName}] Scanning ALL pages on fallback API...`);
 
-            // Fetch ALL videos from fallback
-            const response = await axios.get(config.fallback.endpoint, {
-                headers: config.fallback.headers,
-                timeout: timeoutConfig.fallbackTimeout,
-            });
+            const videos = await fetchAllPages(
+                config.fallback.endpoint,
+                config.fallback.headers,
+                timeoutConfig.fallbackTimeout
+            );
 
-            // Parse response array
-            let videos = [];
-            if (Array.isArray(response.data)) {
-                videos = response.data;
-            } else if (response.data.results && Array.isArray(response.data.results)) {
-                videos = response.data.results;
-            } else if (response.data.data && Array.isArray(response.data.data)) {
-                videos = response.data.data;
-            }
+            console.log(`[${hostName}] Fallback API: ${videos.length} total videos across all pages`);
 
-            console.log(`[${hostName}] Fallback API returned ${videos.length} videos`);
-
-            // Find matching video
             for (const video of videos) {
                 const parsed = parseVideoTitle(video.name || video.title);
-
                 if (matchContent(tmdbData, parsed)) {
-                    console.log(`[${hostName}] Match found in fallback API:`, video.name || video.title);
-                    console.log(`[${hostName}] Video ID:`, video.id);
-
-                    // Make a second API call to get FULL video details (includes embed/download)
-                    try {
-                        console.log(`[${hostName}] Fetching full video details for ID: ${video.id}`);
-                        const detailsResponse = await axios.get(`${config.fallback.endpoint}/${video.id}`, {
-                            headers: config.fallback.headers,
-                            timeout: timeoutConfig.fallbackTimeout,
-                        });
-
-                        const fullVideo = detailsResponse.data;
-                        console.log(`[${hostName}] Full video details retrieved from fallback`);
-                        console.log(`[${hostName}] Embed:`, fullVideo.embed ? 'FOUND' : 'EMPTY');
-                        console.log(`[${hostName}] Download:`, fullVideo.download ? 'FOUND' : 'EMPTY');
-
-                        // Extract or construct embed URL
-                        let embedUrl = extractEmbedUrl(fullVideo.embed || fullVideo.embedUrl || '');
-
-                        // If still no embed URL, construct it from ID (p2pplay.pro format)
-                        if (!embedUrl && video.id) {
-                            embedUrl = `https://skyflixerpro.p2pplay.pro/#${video.id}`;
-                            console.log(`[${hostName}] Constructed embed URL from ID:`, embedUrl);
-                        }
-
-                        // Extract or construct download URL
-                        let downloadUrl = fullVideo.download || fullVideo.downloadUrl || fullVideo.premiumDownload || '';
-
-                        // If still no download URL, construct it from ID (p2pplay.pro download format)
-                        if (!downloadUrl && video.id) {
-                            downloadUrl = `https://skyflixerpro.p2pplay.pro/#${video.id}&dl=1`;
-                            console.log(`[${hostName}] Constructed download URL from ID:`, downloadUrl);
-                        }
-
-                        return {
-                            hostName,
-                            available: true,
-                            embedUrl,
-                            downloadUrl,
-                            source: 'fallback',
-                            videoData: {
-                                id: video.id,
-                                name: fullVideo.name || video.name || video.title,
-                                ...parsed,
-                            },
-                        };
-                    } catch (detailsError) {
-                        console.error(`[${hostName}] Failed to fetch full details from fallback, using constructed URLs:`, detailsError.message);
-
-                        // Fallback: construct URLs from ID based on host
-                        let embedUrl = `https://skyflixerpro.p2pplay.pro/#${video.id}`;
-                        let downloadUrl = `https://skyflixerpro.p2pplay.pro/#${video.id}&dl=1`;
-
-                        if (hostName === 'seekstreaming') {
-                            embedUrl = `https://skyflixer.seekplayer.me/#${video.id}`;
-                            downloadUrl = `https://skyflixer.seekplayer.me/#${video.id}&dl=1`;
-                        } else if (hostName === 'upnshare') {
-                            embedUrl = `https://skyflixer.upn.one/#${video.id}`;
-                            downloadUrl = `https://skyflixer.upn.one/#${video.id}&dl=1`;
-                        } else if (hostName === 'rpmshare') {
-                            embedUrl = `https://skyflixer.rpmplay.me/#${video.id}`;
-                            downloadUrl = `https://skyflixer.rpmplay.me/#${video.id}&dl=1`;
-                        }
-
-                        return {
-                            hostName,
-                            available: true,
-                            embedUrl,
-                            downloadUrl,
-                            source: 'fallback',
-                            videoData: {
-                                id: video.id,
-                                name: video.name || video.title,
-                                ...parsed,
-                            },
-                        };
-                    }
+                    console.log(`[${hostName}] Match found in fallback: "${video.name || video.title}" (id=${video.id})`);
+                    const result = await buildVideoResult(
+                        hostName, video,
+                        config.fallback.endpoint,
+                        config.fallback.headers,
+                        timeoutConfig.fallbackTimeout
+                    );
+                    return { ...result, source: 'fallback' };
                 }
             }
 
@@ -338,7 +340,7 @@ export async function fetchFromHost(hostName, tmdbData) {
             throw new Error('No matching video found in fallback API');
 
         } catch (fallbackError) {
-            console.error(`[${hostName}] Both APIs failed:`, fallbackError.message);
+            console.error(`[${hostName}] Both APIs exhausted: ${fallbackError.message}`);
             return {
                 hostName,
                 available: false,
@@ -352,7 +354,7 @@ export async function fetchFromHost(hostName, tmdbData) {
  * Fetch from all video hosting services concurrently
  */
 export async function fetchAllHosts(tmdbData) {
-    console.log('Fetching from all hosts:', tmdbData);
+    console.log('Fetching from all hosts for:', tmdbData);
 
     const hosts = ['streamp2p', 'seekstreaming', 'upnshare', 'rpmshare'];
 
@@ -366,9 +368,7 @@ export async function fetchAllHosts(tmdbData) {
         organizedResults[result.hostName] = result;
     });
 
-    // Count available servers
     const availableCount = results.filter(r => r.available).length;
-
     console.log(`Found ${availableCount} available server(s)`);
 
     return {
