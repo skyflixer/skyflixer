@@ -177,11 +177,10 @@ class GitHubService {
             const content = Buffer.from(data.content, 'base64').toString('utf-8');
             return JSON.parse(content);
         } catch (error) {
-            if (error.status === 404) {
-                // Return default if not found
-                return { defaultPlayer: 'streamp2p', lastUpdated: new Date().toISOString() };
-            }
-            throw new Error(`Failed to fetch player settings: ${error.message}`);
+            // Always return a safe default — whether the file doesn't exist,
+            // credentials are bad, or the repo is unreachable.
+            console.warn('GitHub getPlayerSettings warning:', error.message);
+            return { defaultPlayer: 'streamp2p', lastUpdated: new Date().toISOString() };
         }
     }
 

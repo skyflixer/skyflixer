@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Home, Edit, Play, Settings, Github, Activity, LogOut, Menu, X } from 'lucide-react';
+import { BACKEND_URL } from '@/config';
 
 // Import sections (will create these next)
 import EditPostsSection from '@/components/admin/EditPostsSection';
 import PlayerSettingsSection from '@/components/admin/PlayerSettingsSection';
 import GitHubStatusSection from '@/components/admin/GitHubStatusSection';
 import DashboardOverview from '@/components/admin/DashboardOverview';
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://skyflixer1-skyflixer-backend.hf.space/api';
 
 type Section = 'dashboard' | 'edit' | 'player' | 'status';
 

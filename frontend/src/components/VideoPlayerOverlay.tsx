@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePlayerSettings } from '../hooks/usePlayerSettings';
+import { BACKEND_URL } from '@/config';
 
 interface VideoPlayerOverlayProps {
     isOpen: boolean;
@@ -87,8 +88,6 @@ export function VideoPlayerOverlay({
             setIsFetchingServers(true);
 
             try {
-                const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://skyflixer1-skyflixer-backend.hf.space/api';
-
                 // First, try to fetch manual post from GitHub
                 const mediaType = type === 'movie' ? 'movies' : 'tv-shows';
                 console.log(`[VideoPlayer] Fetching manual post: ${mediaType}/${id}`);

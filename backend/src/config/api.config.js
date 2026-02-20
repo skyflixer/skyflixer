@@ -13,7 +13,9 @@ export const config = {
         origin: [
             process.env.FRONTEND_URL || 'https://skyflixer.netlify.app',
             'https://skyflixer.netlify.app',
-            'http://localhost:5173', // Vite default
+            'http://localhost:8080', // Frontend dev server (Vite)
+            'http://127.0.0.1:8080',
+            'http://localhost:5173', // Vite default (fallback)
             'http://127.0.0.1:5173'
         ],
         credentials: true,
