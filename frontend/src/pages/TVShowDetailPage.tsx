@@ -156,8 +156,10 @@ export default function TVShowDetailPage() {
 
       // Set initial season only on first load (not when returning from player)
       if (showData.seasons.length > 0) {
-        const firstRegularSeason = showData.seasons.find(s => s.season_number > 0);
-        setSelectedSeason(firstRegularSeason?.season_number || 1);
+        // Default to the LATEST regular season
+        const regularSeasonsList = showData.seasons.filter(s => s.season_number > 0);
+        const latestSeason = regularSeasonsList[regularSeasonsList.length - 1];
+        setSelectedSeason(latestSeason?.season_number || 1);
       }
     } catch (error) {
       console.error("Failed to load show:", error);
@@ -257,20 +259,18 @@ export default function TVShowDetailPage() {
           {!imageLoaded && <div className="absolute inset-0 shimmer" />}
           <img
             ref={(img) => {
-              // If image is already loaded (cached), set imageLoaded immediately
-              if (img?.complete) {
-                setImageLoaded(true);
-              }
+              if (img?.complete) setImageLoaded(true);
             }}
-            src={getImageUrl(show.backdrop_path, IMAGE_SIZES.backdrop.original)}
+            src={getImageUrl(show.backdrop_path, IMAGE_SIZES.backdrop.large)}
             alt={show.name}
             className={cn(
-              "w-full h-full object-cover object-top transition-opacity duration-500",
+              "w-full h-full object-cover object-top transition-opacity duration-300",
               imageLoaded ? "opacity-100" : "opacity-0"
             )}
             onLoad={() => setImageLoaded(true)}
-            onError={() => setImageLoaded(true)} // Show even if image fails to prevent infinite skeleton
-            loading="lazy"
+            onError={() => setImageLoaded(true)}
+            loading="eager"
+            fetchpriority="high"
           />
         </div>
 

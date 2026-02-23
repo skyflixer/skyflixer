@@ -5,6 +5,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- TMDB CDN preconnect — eliminates DNS+TLS handshake delay for all images -->
+  <link rel="preconnect" href="https://image.tmdb.org" crossorigin />
+  <link rel="dns-prefetch" href="https://image.tmdb.org" />
+  <link rel="preconnect" href="https://api.themoviedb.org" crossorigin />
+  <link rel="dns-prefetch" href="https://api.themoviedb.org" />
+
+
   <!-- Primary Meta Tags -->
   <title>Skyflixer — Free Movies, TV Shows & Anime in Full HD</title>
   <meta name="title" content="Skyflixer — Free Movies, TV Shows & Anime in Full HD" />
